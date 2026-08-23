@@ -20,9 +20,10 @@ so proxy providers work locally exactly as they do in production.
 No key is needed to boot the app. Add one under **API Settings** to actually
 generate, or copy `.env.example` to `.env.local` to pre-fill it.
 
-> **Note:** the repo carries both `package-lock.json` and `yarn.lock`. CI
-> installs with `npm ci`, so `package-lock.json` is the one that decides what
-> gets tested. Use npm unless you have a reason not to.
+> **Note:** npm is the supported package manager — `package-lock.json` is the
+> only lockfile, and CI installs with `npm ci`. Please don't add a lockfile for
+> a different manager: a second one drifts from the first, and contributors end
+> up testing a dependency tree that CI never sees.
 
 ## Before you open a PR
 
