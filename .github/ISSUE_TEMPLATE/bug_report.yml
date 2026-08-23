@@ -1,0 +1,80 @@
+name: Bug report
+description: Something in the engine misbehaves
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: open the **Log Viewer** (Settings menu in a chat) and check
+        the failing request. Most "it stopped replying" reports turn out to be a
+        provider error that the log shows verbatim.
+
+        **Never paste an API key.** Scrub the `Authorization` header from
+        anything you copy in.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+      placeholder: |
+        1. Imported a card and started a chat
+        2. Sent a message
+        3. Expected a reply, got a red toast saying ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider path
+      description: Which side of the engine were you on?
+      options:
+        - Proxy (OpenAI-compatible endpoint)
+        - Gemini (Google AI Studio)
+        - Both
+        - Not sure / not provider-related
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: Model and endpoint
+      description: The model id and the host you were calling. No key.
+      placeholder: "google/gemini-3.5-flash via openrouter.ai"
+
+  - type: dropdown
+    id: world-model
+    attributes:
+      label: Was the World Model enabled?
+      description: The multi-agent pipeline behaves quite differently from the single-prompt path.
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      description: Console errors, or the failing request from the Log Viewer. Scrub credentials.
+      render: text
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and OS
+      placeholder: "Firefox 141, Windows 11"
+
+  - type: checkboxes
+    id: hygiene
+    attributes:
+      label: Checks
+      options:
+        - label: I removed every API key from the text above
+          required: true
+        - label: I searched existing issues for this
+          required: true

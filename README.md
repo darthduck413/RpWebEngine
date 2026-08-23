@@ -131,6 +131,17 @@ models to write adult fiction, and several of them are explicitly jailbreak-shap
 It is intended for adults writing fiction with models they have the right to use.
 Whatever you generate is between you and your provider — check their terms.
 
+## Contributing
+
+Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) has the
+setup and, more usefully, the few invariants that are easy to break by accident
+— chiefly that prompt ordering is what keeps provider caching alive, and that
+the two provider paths have to stay in step.
+
+For feature requests, describing the story problem beats describing the
+solution. Security issues go through [SECURITY.md](SECURITY.md) rather than a
+public issue.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

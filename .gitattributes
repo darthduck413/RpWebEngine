@@ -1,0 +1,25 @@
+# Normalize every text file to LF in the repository. Without this, whether a
+# contributor's commits carry CRLF depends on their local core.autocrlf, and a
+# single mis-set clone can rewrite whole files as "changed".
+* text=auto eol=lf
+
+# Windows-only files keep CRLF on checkout.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Never touch these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+
+# Lockfiles are generated — collapse them in PR diffs.
+package-lock.json linguist-generated=true
+yarn.lock linguist-generated=true
+
+# Character cards are data, not source: keep them out of language stats.
+cards/*.png linguist-vendored=true

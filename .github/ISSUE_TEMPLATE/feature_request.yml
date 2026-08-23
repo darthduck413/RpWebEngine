@@ -1,0 +1,56 @@
+name: Feature request
+description: Suggest an improvement to the engine
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The most useful requests describe a **problem in a story** rather than a
+        solution — that usually produces a better feature than a spec does.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What were you trying to do, and where did the engine get in the way?
+      placeholder: |
+        I run long multi-character scenes, and after ~40 turns the model starts
+        forgetting who is in the room, so I have to restate it every message.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you have in mind (optional)
+      description: If you already have a shape in mind, sketch it. Fine to leave blank.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the engine?
+      options:
+        - World Model / agent pipeline
+        - Prompting and context assembly
+        - World Info / manual scenarios
+        - Character cards and import/export
+        - Providers, presets, the Builder
+        - Chat UI and branching
+        - Personas
+        - Storage, backup, import/export
+        - Something else / not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: How do you work around it today?
+      description: Including "I don't" — that itself is useful signal.
+
+  - type: checkboxes
+    id: hygiene
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues for this
+          required: true
