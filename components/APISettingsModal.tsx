@@ -1067,8 +1067,8 @@ const PresetBuilder: React.FC<PresetBuilderProps> = ({ themeColor, onCreate, onG
     return (
         <div className="space-y-5 animate-fadeIn">
             <p className="text-xs text-gray-400 leading-relaxed">
-                Assemble a proxy preset from prefabs: pick a <span className="text-primary-300">model</span> (endpoint + key baked in),
-                pick a <span className="text-primary-300">prompt</span>, then add it to the Proxy tab.
+                Assemble a proxy preset from prefabs: pick a <span className="text-primary-300">model</span> (model id + endpoint),
+                pick a <span className="text-primary-300">prompt</span>, then add it to the Proxy tab and paste your key there.
             </p>
 
             {/* Step 1 — model */}
