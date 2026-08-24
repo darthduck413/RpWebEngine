@@ -101,6 +101,13 @@ For feature requests, describing the story problem beats describing the
 solution. Security issues go through [SECURITY.md](SECURITY.md) rather than a
 public issue.
 
+## Credits
+
+The GLM 4.6, GLM 5.2, Mimo 2.5 and Gemma 4 prompt presets are adapted from the
+community collection at
+[Evening Truth Roleplay Prompts](https://rentry.org/Evening-Truth-Roleplay-Prompts).
+Thanks to its authors — they did the tuning work those presets rest on.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
