@@ -12,6 +12,7 @@ import { TrashIcon } from './icons/TrashIcon';
 import { ArrowUpTrayIcon } from './icons/ArrowUpTrayIcon';
 import { ArrowDownTrayIcon } from './icons/ArrowDownTrayIcon';
 import { ChatBubbleLeftRightIcon } from './icons/ChatBubbleLeftRightIcon';
+import { CheckCircleIcon } from './icons/CheckCircleIcon';
 import { deleteChatsForCharacter } from '../store/thunks/gameThunks';
 import { storageService } from '../services/storage';
 import { SHARED_SYSTEM_INSTRUCTION_TEMPLATE, SHARED_USER_DESCRIPTION } from '../constants';
@@ -28,9 +29,12 @@ interface CharacterCardProps {
     chatCount: number;
     isExpanded: boolean;
     themeColor: string;
+    /** Bulk-delete mode: a click picks the card out instead of opening it. */
+    selectionMode?: boolean;
+    isSelected?: boolean;
 }
 
-const CharacterCard: React.FC<CharacterCardProps> = ({ character, onSelect, onToggleExpand, onExport, onDeleteChats, chatCount, isExpanded, themeColor }) => {
+const CharacterCard: React.FC<CharacterCardProps> = ({ character, onSelect, onToggleExpand, onExport, onDeleteChats, chatCount, isExpanded, themeColor, selectionMode = false, isSelected = false }) => {
     const tags = (character.tags ?? []).filter(Boolean).slice(0, 3);
 
     return (
@@ -39,7 +43,12 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, onSelect, onTo
             role="button"
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
-            className="group relative block w-full aspect-[3/4] rounded-xl overflow-hidden cursor-pointer bg-gray-800 ring-1 ring-white/5 shadow-lg transition-all duration-300 hover:ring-2 hover:ring-primary-500/70 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary-900/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            aria-pressed={selectionMode ? isSelected : undefined}
+            className={`group relative block w-full aspect-[3/4] rounded-xl overflow-hidden cursor-pointer bg-gray-800 shadow-lg transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                isSelected
+                    ? 'ring-2 ring-red-500 -translate-y-1 shadow-2xl shadow-red-900/40'
+                    : 'ring-1 ring-white/5 hover:ring-2 hover:ring-primary-500/70 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary-900/30'
+            }`}
         >
             <img
                 src={character.image}
@@ -51,8 +60,23 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, onSelect, onTo
             {/* Bottom scrim for legible name */}
             <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/70 to-transparent" />
 
+            {/* Unpicked cards recede so the picked ones read at a glance. */}
+            {selectionMode && !isSelected && (
+                <div className="absolute inset-0 bg-gray-950/55 z-10 transition-opacity duration-200" />
+            )}
+
+            {selectionMode && (
+                <div className="absolute top-2 right-2 z-20">
+                    <span className={`flex items-center justify-center w-7 h-7 rounded-full border-2 backdrop-blur-sm transition-colors ${
+                        isSelected ? 'bg-red-500 border-red-400 text-white' : 'bg-black/50 border-white/50 text-transparent'
+                    }`}>
+                        <CheckCircleIcon className="w-5 h-5" />
+                    </span>
+                </div>
+            )}
+
             {/* Hover action icons (top-right) */}
-            <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 focus-within:opacity-100 transition-all duration-200">
+            <div className={`absolute top-2 right-2 flex flex-col gap-2 opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 focus-within:opacity-100 transition-all duration-200 ${selectionMode ? 'hidden' : ''}`}>
                 <button
                     onClick={onToggleExpand}
                     className="p-2 bg-black/60 rounded-full backdrop-blur-sm text-gray-100 hover:bg-primary-600 hover:text-white transition-colors"
@@ -96,7 +120,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, onSelect, onTo
             </div>
 
             {/* "Chat" affordance on hover */}
-            <div className="absolute inset-x-0 top-0 p-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className={`absolute inset-x-0 top-0 p-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${selectionMode ? 'hidden' : ''}`}>
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide rounded-full bg-primary-600/90 text-white shadow-lg">
                     Open
                 </span>
@@ -337,12 +361,49 @@ const CharacterSelectionPage: React.FC<CharacterSelectionPageProps> = ({ onSelec
   const searchQuery = useAppSelector(state => state.ui.searchQuery);
   
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // Bulk delete: the roster turns into a picker until the user leaves the mode.
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Saved-chat counts per character, so cards can badge history and offer a
   // "delete all chats" action. Rebuilt from the chat index whenever the roster
   // changes (import/edit/delete) — the index is the source of truth.
   const [chatCounts, setChatCounts] = useState<Record<string, number>>({});
+
+  const enterSelectionMode = () => {
+    setExpandedId(null);
+    setSelectedIds([]);
+    setSelectionMode(true);
+  };
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds([]);
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const handleBulkDelete = () => {
+    const count = selectedIds.length;
+    // Each dispatch persists on its own (see the characters/ hook in store.ts).
+    selectedIds.forEach(id => dispatch(deleteCharacter(id)));
+    setConfirmBulkDelete(false);
+    exitSelectionMode();
+    dispatch(showToast({ message: `${count} character${count === 1 ? '' : 's'} deleted`, type: 'success' }));
+  };
+
+  // Escape is the fastest way out of a mode you entered by accident.
+  useEffect(() => {
+    if (!selectionMode) return;
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') exitSelectionMode(); };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectionMode]);
+
   const refreshChatCounts = () => {
     const counts: Record<string, number> = {};
     Object.values(storageService.getChatIndex()).forEach(chat => {
@@ -383,6 +444,11 @@ const CharacterSelectionPage: React.FC<CharacterSelectionPageProps> = ({ onSelec
         char.tags?.some(tag => tag.toLowerCase().includes(query))
     );
   }, [characters, searchQuery]);
+
+  // "Select all" acts on what the search is currently showing, not the whole
+  // roster — otherwise it would quietly pick out characters you cannot see.
+  const allFilteredSelected = filteredCharacters.length > 0
+    && filteredCharacters.every(c => selectedIds.includes(c.id));
 
   const handleToggleExpand = (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
@@ -524,19 +590,58 @@ const CharacterSelectionPage: React.FC<CharacterSelectionPageProps> = ({ onSelec
             <div className="min-w-0">
                 <h2 className="text-xl font-bold text-white">Characters</h2>
                 <p className="text-xs text-gray-500 mt-0.5">
-                    {searchQuery
-                        ? `${filteredCharacters.length} of ${characters.length} shown`
-                        : `${characters.length} available`}
+                    {selectionMode
+                        ? `${selectedIds.length} selected`
+                        : searchQuery
+                            ? `${filteredCharacters.length} of ${characters.length} shown`
+                            : `${characters.length} available`}
                 </p>
             </div>
-            <button
-                onClick={() => fileInputRef.current?.click()}
-                className={`flex items-center gap-2 px-4 py-2 bg-primary-900/40 text-sm text-primary-300 font-semibold rounded-md border border-primary-800 hover:bg-primary-900/60 hover:text-white transition-colors flex-shrink-0`}
-            >
-                <ArrowUpTrayIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Import Character</span>
-                <span className="sm:hidden">Import</span>
-            </button>
+            {selectionMode ? (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                        onClick={() => setSelectedIds(allFilteredSelected ? [] : filteredCharacters.map(c => c.id))}
+                        className="px-3 py-2 text-sm font-semibold rounded-md border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                    >
+                        {allFilteredSelected ? 'Clear' : 'Select all'}
+                    </button>
+                    <button
+                        onClick={() => setConfirmBulkDelete(true)}
+                        disabled={selectedIds.length === 0}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md border border-red-800 bg-red-900/40 text-red-300 hover:bg-red-900/60 hover:text-white transition-colors disabled:opacity-40 disabled:hover:bg-red-900/40 disabled:hover:text-red-300 disabled:cursor-not-allowed"
+                    >
+                        <TrashIcon className="w-4 h-4" />
+                        <span>Delete{selectedIds.length > 0 ? ` (${selectedIds.length})` : ''}</span>
+                    </button>
+                    <button
+                        onClick={exitSelectionMode}
+                        className="px-3 py-2 text-sm font-semibold rounded-md border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`flex items-center gap-2 px-4 py-2 bg-primary-900/40 text-sm text-primary-300 font-semibold rounded-md border border-primary-800 hover:bg-primary-900/60 hover:text-white transition-colors`}
+                    >
+                        <ArrowUpTrayIcon className="w-4 h-4" />
+                        <span className="hidden sm:inline">Import Character</span>
+                        <span className="sm:hidden">Import</span>
+                    </button>
+                    {characters.length > 0 && (
+                        <button
+                            onClick={enterSelectionMode}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                        >
+                            <TrashIcon className="w-4 h-4" />
+                            <span className="hidden sm:inline">Delete Characters</span>
+                            <span className="sm:hidden">Delete</span>
+                        </button>
+                    )}
+                </div>
+            )}
             <input type="file" ref={fileInputRef} onChange={handleImportFile} className="hidden" accept=".json,.png,image/png,application/json" />
         </div>
 
@@ -556,13 +661,15 @@ const CharacterSelectionPage: React.FC<CharacterSelectionPageProps> = ({ onSelec
                         ) : (
                             <CharacterCard
                                 character={char}
-                                onSelect={() => onSelectCharacter(char)}
+                                onSelect={() => selectionMode ? toggleSelected(char.id) : onSelectCharacter(char)}
                                 onToggleExpand={(e) => handleToggleExpand(e, char.id)}
                                 onExport={(e) => handleExportCharacter(e, char)}
                                 onDeleteChats={(e) => handleDeleteChats(e, char)}
                                 chatCount={chatCounts[char.id] ?? 0}
                                 isExpanded={false}
                                 themeColor={themeColor}
+                                selectionMode={selectionMode}
+                                isSelected={selectedIds.includes(char.id)}
                             />
                         )}
                     </div>
@@ -626,6 +733,16 @@ const CharacterSelectionPage: React.FC<CharacterSelectionPageProps> = ({ onSelec
         onCancel={() => setChatsToDelete(null)}
         themeColor="red"
         confirmText="Delete All"
+      />
+
+      <ConfirmationModal
+        isOpen={confirmBulkDelete}
+        title={`Delete ${selectedIds.length} character${selectedIds.length === 1 ? '' : 's'}`}
+        message="Are you sure you want to delete these characters? This action is irreversible — consider exporting them first."
+        onConfirm={handleBulkDelete}
+        onCancel={() => setConfirmBulkDelete(false)}
+        themeColor="red"
+        confirmText="Delete Forever"
       />
     </div>
   );
