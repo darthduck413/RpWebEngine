@@ -20,6 +20,9 @@ dist-ssr
 # Locally exported character cards / backups
 card-exports
 
+# Character cards are kept local for now, not shipped with the engine.
+cards/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

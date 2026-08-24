@@ -20,5 +20,3 @@
 # The lockfile is generated — collapse it in PR diffs.
 package-lock.json linguist-generated=true
 
-# Character cards are data, not source: keep them out of language stats.
-cards/*.png linguist-vendored=true

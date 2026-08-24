@@ -577,8 +577,8 @@ const CharacterSelectionPage: React.FC<CharacterSelectionPageProps> = ({ onSelec
                         <p className="text-lg font-medium text-gray-400">No characters yet</p>
                         <p className="mt-1 text-sm max-w-md">
                             RWE ships without a roster. Import a character card (<span className="font-mono">.png</span> or{' '}
-                            <span className="font-mono">.json</span>) to get started, or create one from scratch —
-                            the <span className="font-mono">cards/</span> folder in the repo has a starter set.
+                            <span className="font-mono">.json</span>) to get started, or create one from scratch.
+                            Cards from SillyTavern, chub.ai, and JanitorAI all work.
                         </p>
                         <button
                             onClick={() => fileInputRef.current?.click()}

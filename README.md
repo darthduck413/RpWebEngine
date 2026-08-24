@@ -56,8 +56,8 @@ npm run dev
 ```
 
 Open http://localhost:3000, go to **API Settings**, and paste a key for whichever
-provider you want. Then import a character card — the `cards/` directory has a
-starter set, or grab any card from the wider ecosystem.
+provider you want. Then import a character card — any card from the wider
+ecosystem works, or build one in the character editor.
 
 To pre-fill keys instead of pasting them into each browser, copy `.env.example`
 to `.env.local`. This is optional; nothing is required to run.
@@ -67,7 +67,8 @@ to `.env.local`. This is optional; nothing is required to run.
 RWE starts empty, you can create a character:
 
 - **Import**: character selection page → **Import**, and pick a `.png` or `.json`
-  card. `cards/` contains a set of ready-made cards to get started.
+  card — the format is shared with SillyTavern, chub.ai, and JanitorAI, so most
+  cards you find already work.
 - **Export**: any character's detail page exports it back out as a PNG card,
   including a lossless RWE payload (alternate greetings, settings, lore book)
   under `data.extensions.rwe` that other frontends simply ignore.

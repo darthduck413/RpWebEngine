@@ -38,4 +38,4 @@ published. Prefer letting each user enter their own under API Settings.
 ## Scope
 
 Out of scope: what a model generates, provider-side issues, and content
-concerns. RWE is an uncensored roleplay frontend by design — see the README.
+concerns. RWE is an uncensored roleplay frontend by design.
