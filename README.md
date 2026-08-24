@@ -4,10 +4,6 @@ A browser-based roleplay engine. Bring your own model, import character cards,
 and play. Everything lives in your browser: there is no account, no server-side
 storage, and no telemetry.
 
-RWE covers the same ground as SillyTavern, but leans on a different idea — a
-**multi-agent World Model** that maintains an explicit story state between turns
-instead of asking one model to remember everything from the transcript.
-
 ## Status
 
 Pre-1.0. The storage format is versioned and migrated on load, but expect rough
@@ -15,32 +11,12 @@ edges. Back up from **My Chats → Export** before upgrading.
 
 ## What's in the box
 
-**The World Model pipeline.** Rather than one prompt per turn, a turn is routed
-through a small graph of agents:
-
-| Phase | Agents | Runs |
-| --- | --- | --- |
-| `setup` | Universe Detector → Plotter → Lore / Roster / Locations | once per chat, builds the Story Bible |
-| `routing` | Turn Router | every turn — decides which of the below to skip |
-| `pre-turn` | World Curator | updates the world snapshot |
-| `per-actor` | Character Candidate (one per active character, in parallel) | asks each NPC what they'd do |
-| `synthesis` | Game Master | writes the reply the player actually reads |
-
-The Story Bible, the world snapshot, and per-character state are inspectable and
-editable in the UI (Story Bible, World State, Character Tracker). The router
-exists because the full pipeline is expensive: trivial turns skip most of it.
-
-Prefer the classic single-prompt setup? Turn the World Model off and RWE behaves
-like a conventional frontend.
-
 **Providers.** Two paths, switchable per chat:
 
 - **Gemini** — Google AI Studio keys, native `@google/genai` SDK, thinking-level
   control, and per-key tier tracking (a billed key can request Google's cheaper
   Flex service tier).
-- **Proxy** — any OpenAI-compatible `/chat/completions` endpoint: OpenRouter,
-  the Vercel AI Gateway, community routers, or a local LM Studio / llama.cpp /
-  Ollama server.
+- **Proxy** — any OpenAI-compatible `/chat/completions` endpoint: OpenRouter or any local server.
 
 The **Preset Builder** (API Settings → Builder) assembles a preset from a model
 block and a prompt block, so you can go from "I want to try this model" to a
@@ -88,7 +64,7 @@ to `.env.local`. This is optional; nothing is required to run.
 
 ## Bringing characters
 
-RWE ships with an empty roster on purpose — it is an engine, not a content pack.
+RWE starts empty, you can create a character:
 
 - **Import**: character selection page → **Import**, and pick a `.png` or `.json`
   card. `cards/` contains a set of ready-made cards to get started.
@@ -106,17 +82,6 @@ RWE ships with an empty roster on purpose — it is an engine, not a content pac
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | Vitest suite |
 
-## Deploying
-
-The repo is Vercel-shaped: `api/proxy/chat.ts` is a Node serverless function
-that forwards browser requests to providers that don't send CORS headers. It is
-**not** an open relay — it only forwards to an allowlist of known gateways. To
-reach your own inference server through it, set `PROXY_ALLOWED_HOSTS` on the
-deployment (see `.env.example`).
-
-Any static host works too, as long as you either supply that proxy or use
-providers that are reachable directly from the browser.
-
 ## A note on keys
 
 Keys entered in the UI are stored in your browser's `localStorage` and sent only
@@ -124,16 +89,9 @@ to the provider you configured. Keys supplied through `VITE_*` variables are
 compiled into the bundle and readable by anyone who can open the page — use
 those only for deployments where that is acceptable.
 
-## Content
-
-RWE is an uncensored roleplay engine: the built-in prompt templates instruct
-models to write adult fiction, and several of them are explicitly jailbreak-shaped.
-It is intended for adults writing fiction with models they have the right to use.
-Whatever you generate is between you and your provider — check their terms.
-
 ## Contributing
 
-Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) has the
+This project will improve in future. Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) has the
 setup and, more usefully, the few invariants that are easy to break by accident
 — chiefly that prompt ordering is what keeps provider caching alive, and that
 the two provider paths have to stay in step.
